@@ -10,41 +10,16 @@
 
 
 if [ 1 -eq 0 ]; then    # This is never true, thus it acts as block comments ;)
-################################################################################
-### One liner - Grab the latest version and execute! ###########################
-################################################################################
-wget -qO kali-rolling.sh https://raw.github.com/g0tmi1k/os-scripts/master/kali-rolling.sh \
-  && bash kali-rolling.sh -burp -dns -openvas
-################################################################################
+wget -c -qO kali-rolling.sh https://raw.githubusercontent.com/sirmx/linux-scripts/master/kali-rolling.sh -burp -dns -openvas
 fi
-
-
-#-Defaults-------------------------------------------------------------#
-
-##### Optional steps
-burpFree=false              # Disable configuring Burp Suite (for Burp Pro users...)    [ --burp ]
-hardenDNS=false             # Set static & lock DNS name server                         [ --dns ]
-openVAS=false               # Install & configure OpenVAS (not everyone wants it...)    [ --openvas ]
-
-##### (Optional) Enable debug mode?
-#set -x
-
-##### (Cosmetic) Colour output
 RED="\033[01;31m"      # Issues/Errors
 GREEN="\033[01;32m"    # Success
 YELLOW="\033[01;33m"   # Warnings/Information
 BLUE="\033[01;34m"     # Heading
 BOLD="\033[01;01m"     # Highlight
 RESET="\033[00m"       # Normal
-
-STAGE=0                                                         # Where are we up to
+STAGE=0
 TOTAL=$( grep '(${STAGE}/${TOTAL})' $0 | wc -l );(( TOTAL-- ))  # How many things have we got todo
-
-
-#-Arguments------------------------------------------------------------#
-
-
-##### Read command line arguments
 while [[ "${#}" -gt 0 && ."${1}" == .-* ]]; do
   opt="${1}";
   shift;
