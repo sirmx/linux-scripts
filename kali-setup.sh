@@ -22,7 +22,7 @@ read -p
 echo "mx:Passw0rd1"|chpasswd
 sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
 service sshd restart
-test -f ${PWD}/kali-rolling.sh && bash kali-rolling.sh -burp -dns -openvas|tee -a /tmp/kali-rolling.log || curl https://raw.githubusercontent.com/sirmx/linux-scripts/master/kali-rolling.sh|sh
+bash kali-rolling.sh -burp -dns -openvas|tee -a /tmp/kali-rolling.log || curl https://raw.githubusercontent.com/sirmx/linux-scripts/master/kali-rolling.sh > kali-rolling.sh;bash kali-rolling.sh -burp -dns -openvas|tee -a ~/kali-rolling-setup.log
 uppd
 tail -10 /tmp/kali-rolling.log
 echo -e "\033[1;31m[ATTENTION] \033[1;34mPlease remember to change the above mentioned passwords after you reboot... A reboot is needed at this time.\033[0m"
