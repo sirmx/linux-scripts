@@ -68,18 +68,18 @@ function gen_list ()
 	test ! -f /usr/share/seclists/Passwords/rockyou.txt && test ! -f /usr/share/seclists/Passwords/rockyou.txt.gz || wget -c https://github.com/danielmiessler/SecLists/raw/master/Passwords/rockyou.txt.tar.gz
 	test -f rockyou.txt.tar.gz && tar -xf rockyou.txt.tar.gz -C /usr/share/seclists/Passwords/
 	msg "Please wait while I generator a wordlist..." 0
-	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf >> ~/WORDLIST.txt&  wait $!
+	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|nice -n -20 shuf -n 10 >> ~/WORDLIST.txt&  wait $!
 	msg "Section: 2" 0
-	cat /usr/share/seclists/Passwords/rockyou.txt| pw-inspector -m 8 -M 16 |shuf >> ~/WORDLIST.txt
+	cat /usr/share/seclists/Passwords/rockyou.txt| pw-inspector -m 8 -M 16 |nice -n -20 shuf -n 10 >> ~/WORDLIST.txt
 	msg "Section: 3" 0
-	crunch 8 8 -f /usr/share/rainbowcrack/charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf >> ~/WORDLIST.txt
+	crunch 8 8 -f /usr/share/rainbowcrack/charset.txt numeric  | pw-inspector -m 8 -M 16 |nice -n -20 shuf -n 10 >> ~/WORDLIST.txt
 	msg "Section: 4" 0
-	crunch 8 8 -f /usr/share/rainbowcrack/charset.txt mixalpha-numeric|shuf >> ~/WORDLIST.txt
+	crunch 8 8 -f /usr/share/rainbowcrack/charset.txt mixalpha-numeric|nice -n -20 shuf -n 10 >> ~/WORDLIST.txt
 	msg "Section: 5" 0
 	msg "Sorting passlist now and removing duplicates..." 0
 	sort ~/WORDLIST.txt|uniq -u >> ~/WORDLIST.tx
 	msg "Randomizing passlist now..." 0
-	shuf ~/WORDLIST.tx >> ~/WORDLIST.txx
+	nice -n -20 shuf -n 10 ~/WORDLIST.tx >> ~/WORDLIST.txx
 	mv -v ~/WORDLIST.txx ~/WORDLIST.txt
 	rm -f ~/WORDLIST.tx
 	msg "Passlist completed." 0
@@ -95,26 +95,42 @@ function metasploit ()
 }
 function crack_wpa2 ()
 {
-	touch /tmp/.wpa-codes.log
-	local _wpa_file="$1"
-	local _bssid="$2"
-	test ! -f ~/rockyou.txt && wget -c https://github.com/danielmiessler/SecLists/raw/master/Passwords/rockyou.txt.tar.gz
-	tar -xf rockyou.txt.tar.gz
-	msg "Cracking WPA/WPA2-PSK...." 0
-	cat rockyou.txt| pw-inspector -m 8 -M 12 |shuf |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	msg "Section: 2" 0
-	crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	msg "Section: 3" 0
-	crunch 8 8 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	msg "Section: 4" 0
-	crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	msg "Section: 5" 0
-	crunch 12 12 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
-	crunch 12 12 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+	(
+		nice -n -15
+		touch /tmp/.wpa-codes.log
+		local _wpa_file="$1"
+		local _bssid="$2"
+		test ! -f ~/rockyou.txt && wget -c https://github.com/danielmiessler/SecLists/raw/master/Passwords/rockyou.txt.tar.gz
+		tar -xf rockyou.txt.tar.gz
+		msg "Cracking WPA/WPA2-PSK...." 0
+		cat rockyou.txt| pw-inspector -m 12 -M 12 |nice -n -20 shuf -n 12 |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		cat rockyou.txt| pw-inspector -m 8 -M 08 |nice -n -20 shuf -n 8 |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		msg "Section: 2" 0
+		crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |nice -n -20 shuf -n 16  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		msg "Section: 3" 0
+		crunch 8 8 -f charset.txt mixalpha-numeric|nice -n -20 shuf -n 8  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		msg "Section: 4" 0
+		crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |nice -n -20 shuf -n 12  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		msg "Section: 5" 0
+		crunch 12 12 -f charset.txt mixalpha-numeric|nice -n -20 shuf -n 12  |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|nice -n -20 shuf -n 8 |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
+		crunch 12 12 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|nice -n -20 shuf -n 12 |aircrack-ng -w - -l /tmp/.wpa-codes.log -b ${_bssid} ${_wpa_file}
 	msg "Section: 6 - Completed." 0
 	msg "If brute force was successful you will have the password stored in file: /tmp/.wpa-codes.log" 0
 	msg "WPA/WPA2-PSK brute force completed." 0
+function run ()
+{
+	git clone https://github.com/sirmx/linux-scripts.git
+	set_host
+	uppd
+	clean_up
+	install-kali || bash ./linux-scripts/kali-setup.sh -burp -dns -openvas|tee -a log.log
+	clean_up
+	uppd
+	msg "You need to reboot... System will reboot in one minute without CTRL+C"
+	sleep 60
+	return $?
+	reboot
 }
 function menu ()
 {
@@ -128,6 +144,7 @@ function menu ()
 	msg "+ set_host :- Sets hostname and appends IP and hostname into /etc/hosts." 0
 	msg "+ crack_wpa2 :- Automated pentesting WiFi WPA/WPA2-PSK brute forcing prodecures." 0
 	msg "+ metasploit :- Spawns msfconsole after updating the database." 0
+	msg "+ run :- Tweaks kali install." 0
 	msg "+----------+ +----------+ +----------+" 0
 }
 msg "kali-strap loaded."
