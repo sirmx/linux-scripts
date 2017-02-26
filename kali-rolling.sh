@@ -341,7 +341,7 @@ grubTimeout=5
 (dmidecode | grep -iq virtual) && grubTimeout=1   # Much less if we are in a VM
 file=/etc/default/grub; [ -e "${file}" ] && cp -n $file{,.bkup}
 sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT='${grubTimeout}'/' "${file}"                           # Time out (lower if in a virtual machine, else possible dual booting)
-sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="vga=0x0318"/' "${file}"   # TTY resolution
+sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="vga=0x0318 intel_idle.max_cstate=0 processor.max_cstate=0 processor.ignore_ppc=1 pcie_aspm=performance elevator=noop mce=ignore_ce selinux=0 nmi_watchdog=0 rootflags=data=ordered splash=verbose ipmi_si.kipmi_force=1 transparent_hugepages=disabled"/' "${file}"   # TTY resolution
 update-grub
 
 
@@ -1222,30 +1222,6 @@ sed -i 's/.*set incsearch/set incsearch/' "${file}"
 sed -i 's/.*set autowrite/set autowrite/' "${file}"
 sed -i 's/.*set hidden/set hidden/' "${file}"
 sed -i 's/.*set mouse=.*/"set mouse=a/' "${file}"
-grep -q '^set number' "${file}" 2>/dev/null \
-  || echo 'set number' >> "${file}"                                                                      # Add line numbers
-grep -q '^set expandtab' "${file}" 2>/dev/null \
-  || echo -e 'set expandtab\nset smarttab' >> "${file}"                                                  # Set use spaces instead of tabs
-grep -q '^set softtabstop' "${file}" 2>/dev/null \
-  || echo -e 'set softtabstop=4\nset shiftwidth=4' >> "${file}"                                          # Set 4 spaces as a 'tab'
-grep -q '^set foldmethod=marker' "${file}" 2>/dev/null \
-  || echo 'set foldmethod=marker' >> "${file}"                                                           # Folding
-grep -q '^nnoremap <space> za' "${file}" 2>/dev/null \
-  || echo 'nnoremap <space> za' >> "${file}"                                                             # Space toggle folds
-grep -q '^set hlsearch' "${file}" 2>/dev/null \
-  || echo 'set hlsearch' >> "${file}"                                                                    # Highlight search results
-grep -q '^set laststatus' "${file}" 2>/dev/null \
-  || echo -e 'set laststatus=2\nset statusline=%F%m%r%h%w\ (%{&ff}){%Y}\ [%l,%v][%p%%]' >> "${file}"     # Status bar
-grep -q '^filetype on' "${file}" 2>/dev/null \
-  || echo -e 'filetype on\nfiletype plugin on\nsyntax enable\nset grepprg=grep\ -nH\ $*' >> "${file}"    # Syntax highlighting
-grep -q '^set wildmenu' "${file}" 2>/dev/null \
-  || echo -e 'set wildmenu\nset wildmode=list:longest,full' >> "${file}"                                 # Tab completion
-grep -q '^set invnumber' "${file}" 2>/dev/null \
-  || echo -e ':nmap <F8> :set invnumber<CR>' >> "${file}"                                                # Toggle line numbers
-grep -q '^set pastetoggle=<F9>' "${file}" 2>/dev/null \
-  || echo -e 'set pastetoggle=<F9>' >> "${file}"                                                         # Hotkey - turning off auto indent when pasting
-grep -q '^:command Q q' "${file}" 2>/dev/null \
-  || echo -e ':command Q q' >> "${file}"                                                                 # Fix stupid typo I always make
 #--- Set as default editor
 export EDITOR="vim"   #update-alternatives --config editor
 file=/etc/bash.bashrc; [ -e "${file}" ] && cp -n $file{,.bkup}
@@ -1257,7 +1233,8 @@ git config --global core.editor "vim"
 git config --global merge.tool vimdiff
 git config --global merge.conflictstyle diff3
 git config --global mergetool.prompt false
-
+git config --global user.name sirmx
+git config --global user.email amcguire@ptc.com
 
 ##### Install git - all users
 (( STAGE++ )); echo -e "\n\n ${GREEN}[+]${RESET} (${STAGE}/${TOTAL}) Installing ${GREEN}git${RESET} ~ revision control"
